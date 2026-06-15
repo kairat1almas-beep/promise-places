@@ -1,0 +1,38 @@
+{
+  "name": "Promise Places",
+  "short_name": "Promises",
+  "description": "Личное PWA-приложение для пар: обещанные места, планы, история и индекс выполнения.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#fbfaf6",
+  "theme_color": "#26342d",
+  "categories": ["lifestyle", "productivity"],
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Добавить обещание",
+      "short_name": "Добавить",
+      "description": "Быстро добавить новое место",
+      "url": "/?action=add",
+      "icons": [{ "src": "/icons/icon.svg", "sizes": "any" }]
+    }
+  ]
+}
