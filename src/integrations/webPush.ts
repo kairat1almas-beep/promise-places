@@ -1,7 +1,7 @@
-const vapidPublicKey = import.meta.env.VITE_WEB_PUSH_PUBLIC_KEY as string | undefined;
+import { getPublicConfig } from "../config/publicConfig";
 
 export function isWebPushConfigured() {
-  return Boolean(vapidPublicKey);
+  return Boolean(getPublicConfig().webPushPublicKey);
 }
 
 export function urlBase64ToUint8Array(base64String: string) {
@@ -18,6 +18,7 @@ export function urlBase64ToUint8Array(base64String: string) {
 }
 
 export async function subscribeToPush() {
+  const vapidPublicKey = getPublicConfig().webPushPublicKey;
   if (!vapidPublicKey) throw new Error("Web Push public key is missing");
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
     throw new Error("Push is not supported in this browser");
@@ -32,4 +33,3 @@ export async function subscribeToPush() {
     applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
   });
 }
-

@@ -1,4 +1,5 @@
 import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
+import { getPublicConfig } from "../config/publicConfig";
 
 export type DbPromise = {
   id: number;
@@ -32,26 +33,41 @@ export type DbCoupleMembership = {
   created_at: string;
 };
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+let configFingerprint = "";
 
-export const supabase: SupabaseClient | null =
-  supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+export let supabase: SupabaseClient | null = null;
+
+export function refreshSupabaseClient() {
+  const { supabaseUrl, supabaseAnonKey } = getPublicConfig();
+  const nextFingerprint = `${supabaseUrl ?? ""}::${supabaseAnonKey ?? ""}`;
+
+  if (nextFingerprint === configFingerprint && supabase) {
+    return supabase;
+  }
+
+  configFingerprint = nextFingerprint;
+  supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+  return supabase;
+}
+
+refreshSupabaseClient();
 
 export function isSupabaseConfigured() {
   return Boolean(supabase);
 }
 
 export async function getCurrentSession(): Promise<Session | null> {
-  if (!supabase) return null;
-  const { data } = await supabase.auth.getSession();
+  const supabaseClient = supabase ?? refreshSupabaseClient();
+  if (!supabaseClient) return null;
+  const { data } = await supabaseClient.auth.getSession();
   return data.session;
 }
 
 export async function signInWithEmail(email: string) {
-  if (!supabase) throw new Error("Supabase is not configured");
+  const supabaseClient = supabase ?? refreshSupabaseClient();
+  if (!supabaseClient) throw new Error("Supabase is not configured");
 
-  const { error } = await supabase.auth.signInWithOtp({
+  const { error } = await supabaseClient.auth.signInWithOtp({
     email,
     options: {
       emailRedirectTo: window.location.origin,
@@ -62,6 +78,7 @@ export async function signInWithEmail(email: string) {
 }
 
 export async function signOut() {
-  if (!supabase) return;
-  await supabase.auth.signOut();
+  const supabaseClient = supabase ?? refreshSupabaseClient();
+  if (!supabaseClient) return;
+  await supabaseClient.auth.signOut();
 }

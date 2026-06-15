@@ -1,16 +1,17 @@
+import { getPublicConfig } from "../config/publicConfig";
+
 export type PlaceSuggestion = {
   id: string;
   name: string;
   address: string;
 };
 
-const twoGisKey = import.meta.env.VITE_2GIS_API_KEY as string | undefined;
-
 export function isTwoGisConfigured() {
-  return Boolean(twoGisKey);
+  return Boolean(getPublicConfig().twoGisApiKey);
 }
 
 export async function searchTwoGisPlaces(query: string): Promise<PlaceSuggestion[]> {
+  const twoGisKey = getPublicConfig().twoGisApiKey;
   if (!twoGisKey || query.trim().length < 3) return [];
 
   const url = new URL("https://catalog.api.2gis.com/3.0/items");
@@ -31,4 +32,3 @@ export async function searchTwoGisPlaces(query: string): Promise<PlaceSuggestion
     address: item.address_name || item.full_name || "Адрес не найден",
   }));
 }
-

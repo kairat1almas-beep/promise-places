@@ -1,4 +1,4 @@
-const CACHE_NAME = "promise-places-v2";
+const CACHE_NAME = "promise-places-v3";
 const APP_SHELL = [
   "/",
   "/index.html",

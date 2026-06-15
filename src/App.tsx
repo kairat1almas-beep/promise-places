@@ -26,12 +26,14 @@ import { isTwoGisConfigured, searchTwoGisPlaces, type PlaceSuggestion } from "./
 import {
   getCurrentSession,
   isSupabaseConfigured,
+  refreshSupabaseClient,
   signInWithEmail,
   signOut,
   supabase,
   type DbPromise,
 } from "./integrations/supabase";
 import { isWebPushConfigured, subscribeToPush } from "./integrations/webPush";
+import { initializePublicConfig } from "./config/publicConfig";
 
 type PromiseStatus = "promised" | "planned" | "done";
 type Priority = "Высокий" | "Средний" | "Нежный";
@@ -194,6 +196,7 @@ function App() {
   const [draftDate, setDraftDate] = useState("");
   const [draftPriority, setDraftPriority] = useState<Priority>("Средний");
   const [session, setSession] = useState<Session | null>(null);
+  const [configReady, setConfigReady] = useState(false);
   const [syncState, setSyncState] = useState("Локально на устройстве");
   const [couple, setCouple] = useState<CoupleProfile | null>(null);
   const [coupleMessage, setCoupleMessage] = useState("");
@@ -209,6 +212,24 @@ function App() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
+    initializePublicConfig()
+      .then(() => {
+        refreshSupabaseClient();
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setConfigReady(true);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("action") === "add") {
       setActiveTab("add");
@@ -216,6 +237,7 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!configReady) return;
     if (!supabase) return;
 
     getCurrentSession().then((currentSession) => {
@@ -229,9 +251,10 @@ function App() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [configReady]);
 
   useEffect(() => {
+    if (!configReady) return;
     if (!supabase || !session?.user.id) {
       setSyncState(isSupabaseConfigured() ? "Войдите для облачной синхронизации" : "Локально на устройстве");
       return;
@@ -267,7 +290,7 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, [session?.user.id]);
+  }, [session?.user.id, configReady]);
 
   async function loadCouple() {
     if (!supabase || !session?.user.id) return null;
